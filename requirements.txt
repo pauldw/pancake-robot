@@ -1,0 +1,5 @@
+cffi==1.16.0
+easyhid==0.0.10
+pycparser==2.21
+pyspacemouse==1.1.0
+xArm-Python-SDK==1.13.8
