@@ -5,19 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ed5f76ee-2229-498b-907e-35c531da0c65" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sequences/pancake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/pancake-robot.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/pancake-robot.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batter" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/batter" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/butter" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/butter" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/close" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/close" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dispense" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/dispense" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/open" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/open" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pancakes" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/robot.conf" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -261,7 +251,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1706980351466</updated>
-      <workItem from="1707673081626" duration="4589000" />
+      <workItem from="1707673081626" duration="6313000" />
     </task>
     <servers />
   </component>
