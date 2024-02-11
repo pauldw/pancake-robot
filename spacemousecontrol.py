@@ -1,14 +1,4 @@
 #!/usr/bin/env python3
-# Software License Agreement (BSD License)
-#
-# Copyright (c) 2019, UFACTORY, Inc.
-# All rights reserved.
-#
-# Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
-
-"""
-Description: Move line(linear motion)
-"""
 
 import os
 import sys
@@ -70,21 +60,10 @@ import pyspacemouse
 #   Have the robot start a 2 minute countdown timer
 # Spatula start scooping (after pushing) closer to edge so the pancake edge isn't squished.
 
-#######################################################
-"""
-Just for test example
-"""
-try:
-    from configparser import ConfigParser
-    parser = ConfigParser()
-    parser.read('robot.conf')
-    ip = parser.get('xArm', 'ip')
-except:
-    ip = input('Please input the xArm ip address:')
-    if not ip:
-        print('input error, exit')
-        sys.exit(1)
-########################################################
+from configparser import ConfigParser
+parser = ConfigParser()
+parser.read('robot.conf')
+ip = parser.get('xArm', 'ip')
 
 offsets = {
     'gripper_tip': [0, 0, 80, 0, 0, 0],
