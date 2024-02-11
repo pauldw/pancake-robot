@@ -47,6 +47,11 @@ import pyspacemouse
 # Add reference frame changes?
 # Add reference frame measurement? (i.e. move robot arm to a certain location and record that as the reference frame)
 # Add comment/label ability?
+#
+# Ladle needs anti-tilt grip on handle
+# Need to wait a bit for batter overflow to fall off ladle into reservoir
+# Need a way to step through sequences and insert/update/delete commands
+# Need a way to verify ladle location as it can move, maybe a short test sequence?
 
 
 #######################################################
@@ -117,35 +122,66 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-def play_sequence(mysequence):
+def execute_command(command):
     global gripper_state
+    print(f"Executing: {command}")
+
+    if arm.mode != 0:
+        arm.set_mode(0)
+        arm.set_state(0)
+        time.sleep(1.0)
+
+    if command == 'open':
+        if gripper_state == "open":
+            return
+        arm.open_lite6_gripper()
+        arm.set_pause_time(1.0)
+        gripper_state = "open"
+    elif command == 'close':
+        if gripper_state == "close":
+            return
+        arm.close_lite6_gripper()
+        arm.set_pause_time(1.0)
+        gripper_state = "close"
+    elif command == 'stop':
+        if gripper_state == "stop":
+            return
+        arm.stop_lite6_gripper()
+        arm.set_pause_time(1.0)
+        gripper_state = "stop"
+    elif command[0] == "pause":
+        arm.set_pause_time(command[1])
+    elif command[0] == "include":
+        filename = command[1]
+        play_sequence(read_sequence(filename))
+    else:
+        arm.set_position(*command, wait=False)
+
+def play_sequence(mysequence):
     for newpos in mysequence:
-        print(f"{newpos}")
-        if newpos == 'open':
-            if gripper_state == "open":
-                continue
-            arm.open_lite6_gripper()
-            arm.set_pause_time(1.0)
-            gripper_state = "open"
-        elif newpos == 'close':
-            if gripper_state == "close":
-                continue
-            arm.close_lite6_gripper()
-            arm.set_pause_time(1.0)
-            gripper_state = "close"
-        elif newpos == 'stop':
-            if gripper_state == "stop":
-                continue
-            arm.stop_lite6_gripper()
-            arm.set_pause_time(1.0)
-            gripper_state = "stop"
-        elif newpos[0] == "pause":
-            arm.set_pause_time(newpos[1])
-        elif newpos[0] == "include":
-            filename = newpos[1]
-            play_sequence(read_sequence(filename))
-        else:
-            arm.set_position(*newpos, wait=False)
+        execute_command(newpos)
+    finished = False
+    ready = False
+    while not finished:
+        code, cmdnum = arm.get_cmdnum()
+        if (cmdnum == 0):
+            finished = True
+        if (code != 0 or arm.has_err_warn):
+            print("Error, stopping playback.")
+            ready = True
+            finished = True
+            # TODO actually jump out of outer loop and reset robot at this point
+        time.sleep(0.5)
+    print("Waiting for arm to be ready.")
+    while not ready:
+        code, newstate = arm.get_state()
+        if newstate == 2:
+            ready = True
+        if code != 0 or arm.has_err_warn:
+            print("Playback error.")
+            ready = True
+        time.sleep(0.5)
+    print("Playback finished.")
 
 def read_sequence(filename):
     f = open(filename, "r")
@@ -182,29 +218,7 @@ while 1:
             filename = input("Load sequence from: ")
             sequence = read_sequence(filename)
         if key == b'p':
-            if arm.mode != 0:
-                arm.set_mode(0)
-                arm.set_state(0)
             play_sequence(sequence)
-            finished = False
-            ready = False
-            while not finished:
-                code, cmdnum = arm.get_cmdnum()
-                if(cmdnum == 0):
-                    finished = True
-                if(code != 0):
-                    print("Error, stopping playback.")
-                    ready = True
-                    finished = True
-                    # TODO actually jump out of outer loop and reset robot at this point
-                time.sleep(0.5)
-            print("Waiting for arm to be ready.")
-            while not ready:
-                code, newstate = arm.get_state()
-                if newstate == 2:
-                    ready = True
-                time.sleep(0.5)
-            print("Playback finished.")
         if key == b'c':
             sequence = []
             print("Cleared sequence.")
@@ -213,21 +227,13 @@ while 1:
             sequence.append("open")
         if key == b'2':
             arm.close_lite6_gripper()
-            sequence.append("close")
+            sequence.append( "close")
         if key == b'3':
             arm.stop_lite6_gripper()
             sequence.append("stop")
         if key == b'4':
             duration = float(input("Pause length: "))
             sequence.append(["pause", duration])
-        if key == b'\\':
-            arm.set_mode(0)
-            arm.set_state(0)
-            arm.move_gohome(wait=True)
-            time.sleep(1.0)
-            arm.set_mode(5)
-            arm.set_state(0)
-            time.sleep(1)
         if key == b'x':
             arm.disconnect()
             sys.exit(0)
@@ -264,6 +270,8 @@ while 1:
 
     if arm.mode != 5:
         arm.set_mode(5)
+        arm.set_state(0)
+        time.sleep(1.0)
 
     if not arm.connected:
         arm.connect()
