@@ -1,40 +1,69 @@
 #!/usr/bin/env python3
-# Software License Agreement (BSD License)
-#
-# Copyright (c) 2019, UFACTORY, Inc.
-# All rights reserved.
-#
-# Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
-
-"""
-Description: Move line(linear motion)
-"""
 
 import os
 import sys
 import time
 import msvcrt
+import json
+import signal
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 
 from xarm.wrapper import XArmAPI
+import pyspacemouse
 
+# TODO
+# Lock axis set (i.e. clamp any of x,y,z,roll,pitch,yaw to 0)
+# Set speed for sequence capture
+# Add pause to sequence
+# Detect when sequence is finished
+#
+# Sequence storage under different names
+# Sequence replay by sequence name
+# (Sequences should probably just be Python code?)
+#
+# Standardize magnet mounts on rectangle magnets
+# Move to melamine board
+# Mount tools near bowls and iron (brush->butter, ladle->batter, spatula->iron)
+# Record sequences and make a pancake
+#
+# Add jogging
+# Add cursor position parameter changes
+# Add inserts
+# Add deletes
+# Add axis locks
+# Add TCP payload changes
+# Add TCP offset changes? (problematic as that context is lost in the recorded position)
+# Add reference frame changes?
+# Add reference frame measurement? (i.e. move robot arm to a certain location and record that as the reference frame)
+# Add comment/label ability?
+#
+# Ladle needs anti-tilt grip on handle
+# Need to wait a bit for batter overflow to fall off ladle into reservoir
+# Need a way to step through sequences and insert/update/delete commands
+# Need a way to verify ladle location as it can move, maybe a short test sequence?
+#
+# Fix issue where ladle slides out to the side.
+#   Try tipping the ladle more slowly so the batter comes out and reduces weight.
+#   Try adding a squish rubber end.
+#   Try adding an external "cage" of sorts that
+#   Try shortening ladle arm.
+# Apply more butter.
+# Fix ladle in its location with more certainty (try fixing the measuring cup with a ring at the base, first)
+# Tip batter more into the center of the iron.
+# Push pancake directly towards the bowl (slightly at an angle).
+# Have an infinite loop mode so you don't have to remember to start the next pancake (pancakes should just appear).  Also consider "autonomation" where the robot lets you know the batter is empty.
+# Consider adding a "pancake chute", possibly combined with raising the iron so the pancake slides down the chute.
+# Add some indicator of the passage of time
+#   Have the robot rotate around occasionally.
+#   "Have you tried the hot fudge sunday?"
+#   Have the robot start a 2 minute countdown timer
+# Spatula start scooping (after pushing) closer to edge so the pancake edge isn't squished.
 
-#######################################################
-"""
-Just for test example
-"""
-try:
-    from configparser import ConfigParser
-    parser = ConfigParser()
-    parser.read('robot.conf')
-    ip = parser.get('xArm', 'ip')
-except:
-    ip = input('Please input the xArm ip address:')
-    if not ip:
-        print('input error, exit')
-        sys.exit(1)
-########################################################
+from configparser import ConfigParser
+parser = ConfigParser()
+parser.read('robot.conf')
+ip = parser.get('xArm', 'ip')
 
 offsets = {
     'gripper_tip': [0, 0, 80, 0, 0, 0],
@@ -50,417 +79,216 @@ payloads = {
     'spatula': [0.3, [0, 1, 80]] # total guess
 }
 
-positions = {
-    # Relative to "gripper tip"
-    'ladle': [200, 265, 197, 180, 0, 0],
-    'brush': [242.076828, 282.630585, 208.809418, -175.604689, 1.695268, 90.70936],
-    'spatula': [169.0, 278.0, 197.0, -177.000013, 0.0, 92.000005],
-    'open_iron': [
-        [296.221893, -85.830528, 40.560802, 98.589249, 0.369271, 33.893261],
-        [314.422791, -111.97261, 122.805984, 132.589252, 0.369271, 33.893261],
-        [375.90332, -202.867126, 176.57402, 176.589259, 0.369271, 33.893261]
-    ],
-    # Relative to "brush tip"
-    'butter_dish': [342.459381, 113.522774, 15.214893, -178.239091, -4.378085, -179.380366],
-    'butter_circle_top': [
-        [416.364777, -236.65036, 128.111008, -173.239863, 38.273008, 133.082855],
-        [396.010529, -222.641266, 52.147526, -173.239863, 38.273008, 133.082855],
-        [432.203522, -206.247498, 85.152382, -173.239863, 38.273008, 133.082855],
-    ],
-    'butter_circle_bottom': [
-        [372.843414, -166.932495, 14.932927, 179.202119, 39.424481, 129.362067],
-        [341.170593, -110.324371, 17.019363, 179.202119, 39.424481, 129.362067],
-        [311.383667, -168.212387, 13.902067, 179.202119, 39.424481, 129.362067],
-    ],
-    'pancake_iron': [336.530579, -143.349777, 23.555216, -175.359119, -0.935525, 123.618337],
-    # Relative to "ladle lip"
-    'batter_bowl': [84.279709, -281.187317, -4.071232, 179.999275, 0.009798, 90.035046],
-    'ladle_dump': [345.092316, -107.443298, 52.222782, -175.255586, -0.719062, 65.020568],
-    # Relative to "spatula"
-    'spatula_seq': [
-        [105.1436, 135.41745, 29.250355, 179.992629, 53.009826, -178.014606],
-        [305.686859, -108.030716, 54.34576, 179.520053, 19.572181, -56.002155],
-        [305.686859, -108.030716, 44.34576, 179.520053, 19.572181, -56.002155],
-        [349.244751, -152.787125, 33.339344, 179.538388, 11.57243, -55.933973],
-        [365.229889, -176.417435, 28.191858, 179.546352, 4.572662, -55.877537],
-        [369.106201, -181.741928, 47.381966, 179.527616, -3.420673, -55.789932],
-        [366.914642, -177.315811, 129.233093, 179.527616, -3.420673, -55.789932],
-        [618.467224, 29.214106, 124.689827, 176.780914, -1.225499, 5.168881],
-        [618.467224, 29.214106, 124.689827, 75.960968, 21.940846, 11.592082],
-        [618.467224, 29.214106, 124.689827, 176.780914, -1.225499, 5.168881],
-        [366.914642, -177.315811, 129.233093, 179.527616, -3.420673, -55.789932],
-        [305.686859, -108.030716, 54.34576, 179.520053, 19.572181, -56.002155],
-        [105.1436, 135.41745, 29.250355, 179.992629, 53.009826, -178.014606],
-    ]
-}
-
-keys = {
-    b'w': [ 1,  0,  0,  0,  0,  0],
-    b'a': [ 0,  1,  0,  0,  0,  0],
-    b's': [-1,  0,  0,  0,  0,  0],
-    b'd': [ 0, -1,  0,  0,  0,  0],
-    b'r': [ 0,  0,  1,  0,  0,  0],
-    b'f': [ 0,  0, -1,  0,  0,  0],
-
-    b'u': [ 0,  0,  0,  0,  1,  0],
-    b'h': [ 0,  0,  0, -1,  0,  0],
-    b'j': [ 0,  0,  0,  0, -1,  0],
-    b'k': [ 0,  0,  0,  1,  0,  0],
-    b'i': [ 0,  0,  0,  0,  0, -1],
-    b'y': [ 0,  0,  0,  0,  0,  1],
-}
-
 arm = XArmAPI(ip)
 
-arm.set_tcp_offset(offsets[sys.argv[1]], is_radian=False)
-arm.set_tcp_load(*payloads[sys.argv[2]])
-
 arm.motion_enable(enable=True)
-arm.set_mode(0)
-arm.set_state(state=0)
+time.sleep(1)
 
-#arm.reset(wait=True)
+arm.set_tcp_load(*payloads[sys.argv[2]])
+arm.set_tcp_offset(offsets[sys.argv[1]], is_radian=False)
 
-def pick_up_ladle():
-    arm.open_lite6_gripper()
-    time.sleep(1.5)
-    pos = positions['ladle'].copy()
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[2] -= 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.close_lite6_gripper()
-    time.sleep(1.0)
-    pos[2] += 10
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[1] -= 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
+arm.set_mode(5)
+arm.set_state(0)
+time.sleep(1)
 
-    arm.set_tcp_load(*payloads['ladle'], wait=True)
-    arm.set_tcp_offset(offsets['ladle_lip'], is_radian=False)
-    arm.set_state(state=0)
+# Very helpful!
+arm.set_cartesian_velo_continuous(True)
 
-def return_ladle():
-    # Assumes ladle is already picked up with pick_up_ladle
-    arm.set_tcp_load(*payloads['ladle'], wait=True)
-    arm.set_tcp_offset(offsets['gripper_tip'], is_radian=False)
-    arm.set_state(state=0)
+pyspacemouse.open()
 
-    pos = positions['ladle'].copy()
-    pos[2] += 10
-    pos[1] -= 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[1] += 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[2] -= 10
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.open_lite6_gripper()
-    time.sleep(1.0)
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.stop_lite6_gripper()
+multiplier = 100.0
+speed = 100
+radius = 10
+gripper_state = None
 
-def pick_up_brush():
-    arm.open_lite6_gripper()
-    time.sleep(1.5)
-    pos = positions['brush'].copy()
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[2] -= 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.close_lite6_gripper()
-    time.sleep(1.0)
-    pos[0] += 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
+sequence = []
 
-    arm.set_tcp_load(*payloads['brush'], wait=True)
-    arm.set_tcp_offset(offsets['brush_tip'], is_radian=False)
-    arm.set_state(state=0)
+def callback_state_changed(item):
+    pass
+    # TODO add debug mode
+    #print('state changed:', item)
 
-def return_brush():
-    # Assumes brush is already picked up with pick_up_brush
-    arm.set_tcp_load(*payloads['brush'], wait=True)
-    arm.set_tcp_offset(offsets['gripper_tip'], is_radian=False)
-    arm.set_state(state=0)
+arm.register_state_changed_callback(callback=callback_state_changed)
 
-    pos = positions['brush'].copy()
-    pos[0] += 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[0] -= 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.open_lite6_gripper()
-    time.sleep(1.0)
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.stop_lite6_gripper()
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    arm.disconnect()
+    sys.exit(0)
 
-def pick_up_spatula():
-    arm.open_lite6_gripper()
-    time.sleep(1.5)
-    pos = positions['spatula'].copy()
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[2] -= 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.close_lite6_gripper()
-    time.sleep(1.0)
-    pos[0] -= 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
+signal.signal(signal.SIGINT, signal_handler)
 
-    arm.set_tcp_load(*payloads['spatula'], wait=True)
-    arm.set_tcp_offset(offsets['spatula_edge'], is_radian=False)
-    arm.set_state(state=0)
+def execute_command(command):
+    global gripper_state
+    print(f"Executing: {command}")
 
-def return_spatula():
-    # Assumes brush is already picked up with pick_up_brush
-    arm.set_tcp_load(*payloads['spatula'], wait=True)
-    arm.set_tcp_offset(offsets['gripper_tip'], is_radian=False)
-    arm.set_state(state=0)
+    if arm.mode != 0:
+        arm.set_mode(0)
+        arm.set_state(0)
+        time.sleep(1.0)
 
-    pos = positions['spatula'].copy()
-    pos[0] -= 20
-    pos[1] -= 100
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-    pos[1] += 100
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-    pos[0] += 20
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.open_lite6_gripper()
-    time.sleep(1.0)
-    pos[2] += 40
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    arm.stop_lite6_gripper()
-
-def load_butter():
-    # Assumes brush is already picked up with pick_up_brush
-    pos = positions['butter_dish'].copy()
-    pos[2] += 60
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    pos[2] -= 60
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-    time.sleep(1.0)
-    pos[2] += 60
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-def butter_circle():
-    pose0 = positions['butter_circle_top'][0].copy()
-    pose1 = positions['butter_circle_top'][1].copy()
-    pose2 = positions['butter_circle_top'][2].copy()
-
-    arm.set_position(*pose0, speed=100, is_radian=False, wait=True)
-    arm.move_circle(pose1, pose2, 100, speed=100, is_radian=False, wait=True)
-
-    pose0 = positions['butter_circle_bottom'][0].copy()
-    pose1 = positions['butter_circle_bottom'][1].copy()
-    pose2 = positions['butter_circle_bottom'][2].copy()
-
-    arm.set_position(*pose0, speed=100, is_radian=False, wait=True)
-    arm.move_circle(pose1, pose2, 100, speed=100, is_radian=False, wait=True)
-
-    pos = positions['pancake_iron'].copy()
-    pos[2] += 60
-
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-def load_batter():
-    # Assumes ladle is picked up
-    pos = positions['batter_bowl'].copy()
-
-    # Move to lip of bowl first to avoid collisions
-    pos[2] += 160
-    pos[0] += 100
-    pos[1] += 100
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-    # Above middle of bowl
-    pos[0] -= 100
-    pos[1] -= 100
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-    pos[2] -= 160
-    arm.set_position(*pos, speed=25, is_radian=False, wait=True)
-
-    time.sleep(2)
-
-    # TODO set new payload
-
-    pos[2] += 160
-    arm.set_position(*pos, speed=25, is_radian=False, wait=True)
-
-def dump_batter():
-    # Assumes ladle is picked up
-    pos = positions['ladle_dump'].copy()
-
-    # Avoid colliding with bowl
-    pos[2] += 100
-    pos[0] -= 60
-    pos[1] -= 60
-    arm.set_position(*pos, speed=25, is_radian=False, wait=True)
-
-    pos[2] -= 100
-    pos[0] += 60
-    pos[1] += 60
-    arm.set_position(*pos, speed=25, is_radian=False, wait=True)
-
-
-    arm.set_tool_position(pitch=80, is_radian=False, wait=True)
-    arm.set_tool_position(pitch=-80, speed=100, is_radian=False, wait=True)
-
-    # Avoid colliding with butter
-    pos[2] += 100
-    pos[0] -= 60
-    pos[1] -= 60
-    arm.set_position(*pos, speed=100, is_radian=False, wait=True)
-
-def open_iron():
-    arm.close_lite6_gripper()
-    time.sleep(1.0)
-
-    pose0 = positions['open_iron'][0].copy()
-    pose1 = positions['open_iron'][1].copy()
-    pose2 = positions['open_iron'][2].copy()
-
-    pose0[0] -= 40
-    pose0[1] += 40
-    arm.set_position(*pose0, speed=100, is_radian=False, wait=True)
-
-    pose0[0] += 40
-    pose0[1] -= 40
-    arm.set_position(*pose0, speed=100, is_radian=False, wait=True)
-
-    arm.move_circle(pose1, pose2, 25, speed=100, is_radian=False, wait=True)
-
-def record_trajectory():
-    # Turn on manual mode before recording
-    arm.set_mode(2)
-    arm.set_state(0)
-
-    arm.start_record_trajectory()
-
-    # Wait for any key to finish
-    print("Recording. Press any key to finish.")
-    msvcrt.getch()
-
-    arm.stop_record_trajectory()
-    arm.save_record_trajectory('recorded.traj')
-
-    time.sleep(1)
-
-    # Turn off manual mode after recording
-    arm.set_mode(0)
-    arm.set_state(0)
-
-def play_trajectory():
-    arm.close_lite6_gripper()
-    time.sleep(1.0)
-    arm.load_trajectory('recorded.traj')
-    arm.playback_trajectory()
-
-def dispense_pancake():
-    for pos in positions['spatula_seq']:
-        arm.set_position(*pos, speed=100, is_radian=False, wait=False)
-
-amount = 1
-while 1:
-    key = msvcrt.getch()
-    print(key)
-
-    if key == b'-':
-        amount = max(1, amount-1)
-        continue
-
-    if key == b'+':
-        amount = amount + 1
-        continue
-
-    if key == b'1':
+    if command == 'open':
+        if gripper_state == "open":
+            return
         arm.open_lite6_gripper()
-        continue
-
-    if key == b'2':
+        arm.set_pause_time(1.0)
+        gripper_state = "open"
+    elif command == 'close':
+        if gripper_state == "close":
+            return
         arm.close_lite6_gripper()
-        continue
-
-    if key == b'3':
+        arm.set_pause_time(1.0)
+        gripper_state = "close"
+    elif command == 'stop':
+        if gripper_state == "stop":
+            return
         arm.stop_lite6_gripper()
-        continue
+        arm.set_pause_time(1.0)
+        gripper_state = "stop"
+    elif command[0] == "pause":
+        arm.set_pause_time(command[1])
+    elif command[0] == "include":
+        filename = command[1]
+        play_sequence(read_sequence(filename))
+    else:
+        arm.set_position(*command, wait=False)
 
-    if key == b'z':
-        pick_up_ladle()
-        continue
+def play_sequence(mysequence):
+    for newpos in mysequence:
+        execute_command(newpos)
+    finished = False
+    ready = False
+    while not finished:
+        code, cmdnum = arm.get_cmdnum()
+        if (cmdnum == 0):
+            finished = True
+        if (code != 0 or arm.has_err_warn):
+            print("Error, stopping playback.")
+            ready = True
+            finished = True
+            # TODO actually jump out of outer loop and reset robot at this point
+        time.sleep(0.5)
+    print("Waiting for arm to be ready.")
+    while not ready:
+        code, newstate = arm.get_state()
+        if newstate == 2:
+            ready = True
+        if code != 0 or arm.has_err_warn:
+            print("Playback error.")
+            ready = True
+        time.sleep(0.5)
+    print("Playback finished.")
 
-    if key == b'x':
-        return_ladle()
-        continue
+def read_sequence(filename):
+    f = open(filename, "r")
+    mysequence = []
+    for line in f.readlines():
+        strippedline = line.strip()
+        mysequence.append(json.loads(strippedline))
+    f.close()
+    print(f"Loaded sequence from {filename}")
+    return mysequence.copy()
 
-    if key == b'c':
-        pick_up_brush()
-        continue
+while 1:
+    delay_start = time.time()
+    state = pyspacemouse.read()
 
-    if key == b'v':
-        return_brush()
-        continue
+    if msvcrt.kbhit():
+        key = msvcrt.getch()
+        print(key)  # just to show the result
+        if key == b'r':
+            code, curpos = arm.get_position()
+            curpos.append(radius) # radius
+            curpos.append(speed) # speed
+            if code == 0:
+                sequence.append(curpos)
+            print(f"Recorded {curpos}")
+        if key == b's':
+            filename = input("Save sequence as: ")
+            f = open(filename, "w")
+            for newpos in sequence:
+                f.write(json.dumps(newpos) + "\n")
+            f.close()
+            print(f"Saved as {filename}")
+        if key == b'l':
+            filename = input("Load sequence from: ")
+            sequence = read_sequence(filename)
+        if key == b'p':
+            play_sequence(sequence)
+        if key == b'c':
+            sequence = []
+            print("Cleared sequence.")
+        if key == b'1':
+            arm.open_lite6_gripper()
+            sequence.append("open")
+        if key == b'2':
+            arm.close_lite6_gripper()
+            sequence.append( "close")
+        if key == b'3':
+            arm.stop_lite6_gripper()
+            sequence.append("stop")
+        if key == b'4':
+            duration = float(input("Pause length: "))
+            sequence.append(["pause", duration])
+        if key == b'x':
+            arm.disconnect()
+            sys.exit(0)
+        if key == b'[':
+            speed = max(10, speed-10)
+            print(f"Speed: {speed}")
+        if key == b']':
+            speed = min(200, speed+10)
+            print(f"Speed: {speed}")
+        if key == b';':
+            radius = max(1, radius-1)
+            print(f"Radius: {radius}")
+        if key == b"'":
+            radius = min(50, radius+1)
+            print(f"Radius: {radius}")
+        if key == b'o':
+            for newpos in sequence:
+                print(json.dumps(newpos))
+        if key == b'i':
+            filename = input("Include subsequence: ")
+            sequence.append(["include", filename])
 
-    if key == b'b':
-        pick_up_spatula()
-        continue
+    pos = [
+        state.y * multiplier,
+        state.x * multiplier * -1.0,
+        state.z * multiplier,
+        state.roll * multiplier / 1.5,
+        state.pitch * multiplier / 1.5,
+        state.yaw * multiplier / 1.5 * -1.0
+    ]
 
-    if key == b'n':
-        return_spatula()
-        continue
+    if sum([abs(v) for v in pos]) > 0:
+        print(pos)
 
-    if key == b'5':
-        load_butter()
-        continue
+    if arm.mode != 5:
+        arm.set_mode(5)
+        arm.set_state(0)
+        time.sleep(1.0)
 
-    if key == b'6':
-        butter_circle()
-        continue
+    if not arm.connected:
+        arm.connect()
 
-    if key == b'7':
-        load_batter()
-        continue
+    code = arm.vc_set_cartesian_velocity(pos, duration=0.05)
 
-    if key == b'8':
-        dump_batter()
-        continue
+    if sum([abs(v) for v in pos]) > 0:
+        print("done setting velocity")
 
-    if key == b'9':
-        open_iron()
-        continue
+    if code != 0:
+        print("Error! Resetting ...")
+        arm.clean_error()
+        arm.clean_warn()
+        arm.arm.clean_servo_error(4)
+        arm.set_mode(5)
+        arm.set_state(0)
+        time.sleep(1)
+        delay_state = time.time()
+        while time.time() - delay_start < 0.05:
+            pyspacemouse.read()  # Throwing out reads to avoid buffering
 
-    if key == b'0':
-        dispense_pancake()
-        continue
-
-    if key == b',':
-        record_trajectory()
-        continue
-
-    if key == b'.':
-        play_trajectory()
-        continue
-
-    if key == b'\\':
-        arm.reset()
-        continue
-
-    if key == b'\x1b': # esc
-        sys.exit(0)
-
-    # Otherwise, treat as position control
-    if key in keys:
-        pos = keys[key].copy()
-        for i in range(0, len(pos)):
-            pos[i] = pos[i] * amount
-
-        arm.set_tool_position(*pos, speed=100, wait=True)
-        print(arm.get_position(is_radian=False))
-        continue
-
-    print(f"Unrecognized key {key}")
+    while time.time() - delay_start < 0.05:
+        pyspacemouse.read() # Throwing out reads to avoid buffering
 
 arm.disconnect()
-
