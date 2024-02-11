@@ -20,7 +20,6 @@ Running list of possible improvements.
 - Fix issue where ladle occasionally slides out to the side.
   - Try tipping the ladle more slowly so the batter comes out and reduces weight.
   - Try adding a squish rubber end.
-  - Try adding an external "cage" of sorts that
   - Try shortening ladle arm.
 - Apply more butter.
 - Fix ladle in its location with more certainty (try fixing the measuring cup with a ring at the base, first)

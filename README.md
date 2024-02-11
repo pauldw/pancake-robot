@@ -1,12 +1,12 @@
 # Pancake Robot (Beta)
 
+[![Pancake robot video thumbnail.](img/video_thumbnail.jpg)](https://www.youtube.com/watch?v=gNBi5sjOdsg)  
+_(Thumbnail from [YouTube video](https://www.youtube.com/watch?v=gNBi5sjOdsg).)_
+
 An integration of the [Ufactory Lite 6 robot arm](https://www.ufactory.cc/lite-6-collaborative-robot/) with kitchenware 
 to make pancakes.
 
 Includes software for jogging the robot arm with a 3D mouse and recording sequences for playback.
-
-## Video
-https://www.youtube.com/watch?v=gNBi5sjOdsg
 
 ## Software
 
