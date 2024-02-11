@@ -84,9 +84,9 @@ class Controller:
         ready = False
         while not finished:
             code, cmdnum = self.arm.get_cmdnum()
-            if (cmdnum == 0):
+            if cmdnum == 0:
                 finished = True
-            if (code != 0 or self.arm.has_err_warn):
+            if code != 0 or self.arm.has_err_warn:
                 print("Error, stopping playback.")
                 ready = True
                 finished = True
@@ -190,16 +190,16 @@ class Controller:
                 elif key == b'i':
                     filename = input("Include subsequence: ")
                     self.sequence.append(["include", filename])
-            else:
+            elif self.spacemouse is not None:
                 if self.arm.mode != 5:
                     self.arm.set_mode(5)
                     self.arm.set_state(0)
                     delay_start_time = time.time()
                     while time.time() - delay_start_time < 1:
-                        pyspacemouse.read()  # Throwing out reads to avoid buffering
+                        self.spacemouse.read()  # Throwing out reads to avoid buffering
                     continue
 
-                spacemouse_state = pyspacemouse.read()
+                spacemouse_state = self.spacemouse.read()
 
                 velocity = [
                     spacemouse_state.y * self.multiplier,
@@ -216,12 +216,16 @@ class Controller:
                     print("Done setting velocity.")
 
             while time.time() - loop_start_time < 0.05:
-                pyspacemouse.read()  # Throwing out reads to avoid buffering
+                if self.spacemouse is not None:
+                    self.spacemouse.read()  # Throwing out reads to avoid buffering
 
 
 def main():
     arm = XArmAPI(XARM_IP)
     spacemouse = pyspacemouse.open()
+
+    if spacemouse is None:
+        print("No spacemouse found, continuing with jogging disabled.")
 
     controller = Controller(arm, spacemouse)
     controller.run_forever()

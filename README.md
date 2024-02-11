@@ -1,7 +1,7 @@
 # Pancake Robot (Beta)
 
-An integration of the [Ufactory Lite 6 robot arm](https://www.ufactory.cc/lite-6-collaborative-robot/) with regular 
-kitchenware to make pancakes.
+An integration of the [Ufactory Lite 6 robot arm](https://www.ufactory.cc/lite-6-collaborative-robot/) with kitchenware 
+to make pancakes.
 
 Includes software for jogging the robot arm with a 3D mouse and recording sequences for playback.
 
@@ -28,10 +28,8 @@ p
 
 ### Input
 
-Requires a connected spacemouse, see [hardware](#Hardware).
-
 - Control
-  - Spacemouse x/y/z/roll/pitch/yaw: move the arm.
+  - 3D mouse x/y/z/roll/pitch/yaw: move the arm.
   - `x` or `Ctrl-C`: exit
   - `l`: load sequence from file, e.g. "sequences/pancakes"
   - `p`: play sequence
@@ -53,7 +51,7 @@ Requires a connected spacemouse, see [hardware](#Hardware).
 
 - Robot & Control
   - [Ufactory Lite 6 Robot Arm & Gripper](https://www.ufactory.cc/lite-6-collaborative-robot/)
-  - [Spacemouse Compact](https://3dconnexion.com/us/product/spacemouse-compact/)
+  - [Spacemouse Compact 3D Mouse](https://3dconnexion.com/us/product/spacemouse-compact/)
   - Windows Laptop
 - Kitchenware
   - [DASH Mini Maker Electric Round Griddle for Individual Pancakes](https://www.amazon.com/Dash-Mini-Maker-Individual-Breakfast/dp/B01MTXBOA6)
