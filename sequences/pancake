@@ -1,0 +1,6 @@
+["include", "sequences/butter"]
+["include", "sequences/batter"]
+["include", "sequences/close"]
+["pause", 120.0]
+["include", "sequences/open"]
+["include", "sequences/dispense"]

@@ -1,6 +1,0 @@
-["include", "butter"]
-["include", "batter"]
-["include", "close"]
-["pause", 120.0]
-["include", "open"]
-["include", "dispense"]

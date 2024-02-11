@@ -5,8 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ed5f76ee-2229-498b-907e-35c531da0c65" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sequences/pancake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spacemousecontrol.py" beforeDir="false" afterPath="$PROJECT_DIR$/spacemousecontrol.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/batter" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/batter" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/butter" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/butter" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/close" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/close" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dispense" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/dispense" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/open" beforeDir="false" afterPath="$PROJECT_DIR$/sequences/open" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pancakes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/robot.conf" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +26,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -25,20 +39,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Engineer/PycharmProjects/lite6Control/.venv/Scripts&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/pwalker/pancake-robot",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Engineer\PycharmProjects\lite6Control\.venv\Scripts" />
       <recent name="C:\Users\Engineer\PycharmProjects\lite6Control" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\pwalker\pancake-robot\sequences" />
     </key>
   </component>
   <component name="RunManager">
@@ -55,6 +78,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -68,7 +92,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-5a2391486177-d3b881c8e49f-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-233.13763.11" />
+        <option value="bundled-python-sdk-5a2391486177-2887949eec09-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.13763.11" />
       </set>
     </attachedChunks>
   </component>
@@ -80,28 +104,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1706980351466</updated>
+      <workItem from="1707673081626" duration="4589000" />
     </task>
     <servers />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>366</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>87</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>88</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
