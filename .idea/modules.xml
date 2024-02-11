@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/lite6Control.iml" filepath="$PROJECT_DIR$/.idea/lite6Control.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pancake-robot.iml" filepath="$PROJECT_DIR$/.idea/pancake-robot.iml" />
     </modules>
   </component>
 </project>
