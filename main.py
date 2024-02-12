@@ -34,6 +34,8 @@ class Controller:
 
         self.sequence = []
 
+        self.last_set_velocity = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
         arm.set_cartesian_velo_continuous(True)
 
         def sigint_handler(sig, frame):
@@ -56,19 +58,19 @@ class Controller:
                 return
             self.arm.open_lite6_gripper()
             self.arm.set_pause_time(1.0)
-            gripper_state = "open"
+            self.gripper_state = "open"
         elif command == 'close':
             if self.gripper_state == "close":
                 return
             self.arm.close_lite6_gripper()
             self.arm.set_pause_time(1.0)
-            gripper_state = "close"
+            self.gripper_state = "close"
         elif command == 'stop':
             if self.gripper_state == "stop":
                 return
             self.arm.stop_lite6_gripper()
             self.arm.set_pause_time(1.0)
-            gripper_state = "stop"
+            self.gripper_state = "stop"
         elif command[0] == "pause":
             self.arm.set_pause_time(command[1])
         elif command[0] == "include":
@@ -104,13 +106,13 @@ class Controller:
 
     def read_sequence(self, filename):
         f = open(filename, "r")
-        mysequence = []
+        sequence = []
         for line in f.readlines():
             strippedline = line.strip()
-            mysequence.append(json.loads(strippedline))
+            sequence.append(json.loads(strippedline))
         f.close()
         print(f"Loaded sequence from {filename}")
-        return mysequence.copy()
+        return sequence.copy()
 
     def run_forever(self):
         while 1:
@@ -120,18 +122,18 @@ class Controller:
                 print("Arm not connected! Connecting ...")
                 self.arm.connect()
             elif not self.arm.arm.ready:
-                self.arm.motion_enable(enable=True)
-                time.sleep(1)
-                self.arm.set_tcp_load(*TCP_LOADS[TCP_LOAD])
-                self.arm.set_tcp_offset(TCP_OFFSETS[TCP_OFFSET], is_radian=False)
-            elif self.arm.has_err_warn:
-                print("Error or warn! Resetting ...")
+                print("Arm not ready. Resetting ...")
                 self.arm.clean_error()
                 self.arm.clean_warn()
+                self.arm.motion_enable(enable=True)
                 delay_start_time = time.time()
                 while time.time() - delay_start_time < 1:
                     pyspacemouse.read()  # Throwing out reads to avoid buffering
-                continue
+                self.arm.set_tcp_offset(TCP_OFFSETS[TCP_OFFSET], is_radian=False)
+                self.arm.set_mode(5)
+                self.arm.set_state(0)
+                self.arm.set_tcp_load(*TCP_LOADS[TCP_LOAD])
+                print("Done resetting.")
             elif msvcrt.kbhit():
                 key = msvcrt.getch()
                 print(key)  # just to show the result
@@ -151,11 +153,11 @@ class Controller:
                     print(f"Saved as {filename}")
                 elif key == b'l':
                     filename = input("Load sequence from: ")
-                    sequence = self.read_sequence(filename)
+                    self.sequence = self.read_sequence(filename)
                 elif key == b'p':
                     self.play_sequence(self.sequence)
                 elif key == b'c':
-                    sequence = []
+                    self.sequence = []
                     print("Cleared sequence.")
                 elif key == b'1':
                     self.arm.open_lite6_gripper()
@@ -210,10 +212,10 @@ class Controller:
                     spacemouse_state.yaw * self.multiplier / 1.5 * -1.0
                 ]
 
-                if sum([abs(v) for v in velocity]) > 0:
+                if sum([abs(v) for v in velocity]) > 0 or sum([abs(v) for v in self.last_set_velocity]) > 0:
                     print(f"Setting velocity: {velocity}")
-                    code = self.arm.vc_set_cartesian_velocity(velocity, duration=0.05)
-                    print("Done setting velocity.")
+                    self.arm.vc_set_cartesian_velocity(velocity, duration=0.5)
+                    self.last_set_velocity = velocity
 
             while time.time() - loop_start_time < 0.05:
                 if self.spacemouse is not None:
