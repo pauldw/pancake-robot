@@ -22,7 +22,7 @@ pip install -r requirements.txt
 # Make a pancake
 python main.py 192.168.4.100
 l
-sequences/pancakes
+sequences/pancake
 p
 ```
 
@@ -31,7 +31,7 @@ p
 - Control
   - 3D mouse x/y/z/roll/pitch/yaw: move the arm.
   - `x` or `Ctrl-C`: exit
-  - `l`: load sequence from file, e.g. "sequences/pancakes"
+  - `l`: load sequence from file, e.g. "sequences/pancake"
   - `p`: play sequence
   - `s`: save sequence to file
   - `c`: clear sequence
